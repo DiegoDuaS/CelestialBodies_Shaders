@@ -54,36 +54,36 @@ Para modificar que se puede observar, debes de hacer cambios en las siguientes l
 
 Para los cuerpos mostrados, estos son sus propiedades:
 ### Sol
--Archivo: cuerpo2.obj
--Ruido: create_sun_noice
--Shader: sun_shader
+- Archivo: cuerpo2.obj
+- Ruido: create_sun_noice
+- Shader: sun_shader
 
 ### Volcanis
--Archivo: cuerpo2.obj
--Ruido: create_plant3_noice
--Shader: lava_planet_shader
+- Archivo: cuerpo2.obj
+- Ruido: create_plant3_noice
+- Shader: lava_planet_shader
 
 ### Morveth
--Archivo: cuerpo2.obj
--Ruido: create_plant1_noice
--Shader: planet1_shader
+- Archivo: cuerpo2.obj
+- Ruido: create_plant1_noice
+- Shader: planet1_shader
 
 ### Gaia Nova
--Archivo: cuerpo2.obj
--Ruido: create_cloud_noice
--Shader: earth_map_shader
+- Archivo: cuerpo2.obj
+- Ruido: create_cloud_noice
+- Shader: earth_map_shader
 
 ### Aquarion
--Archivo: cuerpo2.obj
--Ruido: create_water_noice
--Shader: water_shader
+- Archivo: cuerpo2.obj
+- Ruido: create_water_noice
+- Shader: water_shader
 
 ### Stratos
--Archivo: saturno2.obj
--Ruido: create_plant2_noice
--Shader: gas_giant_shader
+- Archivo: saturno2.obj
+- Ruido: create_plant2_noice
+- Shader: gas_giant_shader
 
 ### Kraton V
--Archivo: asteroide.obj
--Ruido: create_rock_noice
--Shader:  rock_shader
+- Archivo: asteroide.obj
+- Ruido: create_rock_noice
+- Shader:  rock_shader
