@@ -17,6 +17,8 @@ use obj::Obj;
 use camera::Camera;
 use triangle::triangle;
 use shaders::{vertex_shader, fragment_shader};
+use fastnoise_lite::{FastNoiseLite, NoiseType, FractalType};
+
 
 pub struct Uniforms {
     model_matrix: Mat4,
@@ -24,6 +26,87 @@ pub struct Uniforms {
     projection_matrix: Mat4,
     viewport_matrix: Mat4,
     time: u32,
+    noise: FastNoiseLite
+}
+
+fn create_noise() -> FastNoiseLite {
+    //create_cloud_noise() 
+    //create_water_noise()
+    //create_rock_noise()
+    //create_sun_noise()
+    //create_plant1_noise()
+    //create_plant2_noise()
+    create_plant3_noise()
+}
+
+fn create_cloud_noise() -> FastNoiseLite {
+    let mut noise = FastNoiseLite::with_seed(12345);
+    noise.set_noise_type(Some(NoiseType::OpenSimplex2));
+    noise.set_fractal_type(Some(FractalType::FBm));
+    noise.set_fractal_gain(Some(0.5));  
+    noise.set_frequency(Some(0.005));
+    noise
+}
+
+fn create_water_noise() -> FastNoiseLite {
+    let mut noise = FastNoiseLite::with_seed(34526);
+    noise.set_noise_type(Some(NoiseType::Cellular)); // Tipo de ruido: Celular
+    noise.set_fractal_type(Some(FractalType::FBm));  // Tipo de fractal, en este caso FBm
+    noise.set_frequency(Some(0.1));   
+    noise.set_fractal_octaves(Some(2));              
+    noise
+}
+
+fn create_rock_noise() -> FastNoiseLite {
+    let mut noise = FastNoiseLite::with_seed(12345);
+    noise.set_noise_type(Some(NoiseType::Cellular));
+    noise.set_fractal_type(Some(FractalType::FBm));
+    noise.set_frequency(Some(0.1));                
+    noise
+}
+
+fn create_sun_noise() -> FastNoiseLite {
+    let mut noise = FastNoiseLite::with_seed(12345);
+    noise.set_noise_type(Some(NoiseType::OpenSimplex2));  // Perlin noise for smooth, natural texture
+    noise.set_fractal_type(Some(FractalType::Ridged)); // FBm for layered detail
+    noise.set_fractal_octaves(Some(1));             // High octaves for rich detail
+    noise.set_fractal_lacunarity(Some(2.49));        // Higher lacunarity = more contrast between layers
+    noise.set_fractal_gain(Some(0.8));              // Higher gain = more influence of smaller details
+    noise.set_frequency(Some(0.064));                // Low frequency = large features
+    noise
+}
+
+fn create_plant1_noise() -> FastNoiseLite {
+    let mut noise = FastNoiseLite::with_seed(121);
+    noise.set_noise_type(Some(NoiseType::Perlin));
+    noise.set_fractal_type(Some(FractalType::PingPong));
+    noise.set_fractal_octaves(Some(2));    
+    noise.set_frequency(Some(0.015));     
+    noise.set_fractal_lacunarity(Some(2.49));    
+    noise.set_fractal_gain(Some(0.8));         
+    noise
+}
+
+fn create_plant2_noise() -> FastNoiseLite {
+    let mut noise = FastNoiseLite::with_seed(111);
+    noise.set_noise_type(Some(NoiseType::OpenSimplex2));
+    noise.set_fractal_type(Some(FractalType::PingPong));
+    noise.set_fractal_octaves(Some(2));    
+    noise.set_frequency(Some(0.040));     
+    noise.set_fractal_lacunarity(Some(6.27));    
+    noise.set_fractal_gain(Some(0.8));         
+    noise
+}
+
+fn create_plant3_noise() -> FastNoiseLite {
+    let mut noise = FastNoiseLite::with_seed(92);
+    noise.set_noise_type(Some(NoiseType::Cellular));
+    noise.set_fractal_type(Some(FractalType::Ridged));
+    noise.set_fractal_octaves(Some(1));    
+    noise.set_frequency(Some(0.013));     
+    noise.set_fractal_lacunarity(Some(6.27));    
+    noise.set_fractal_gain(Some(0.8));         
+    noise
 }
 
 fn create_model_matrix(translation: Vec3, scale: f32, rotation: Vec3) -> Mat4 {
@@ -135,12 +218,12 @@ fn main() {
 
     let mut framebuffer = Framebuffer::new(framebuffer_width, framebuffer_height);
     let mut window = Window::new(
-        "Rust Graphics - Renderer Example",
+        "Laboratorio_Bodies",
         window_width,
         window_height,
         WindowOptions::default(),
     )
-    .unwrap();
+        .unwrap();
 
     window.set_position(500, 500);
     window.update();
@@ -159,9 +242,21 @@ fn main() {
         Vec3::new(0.0, 1.0, 0.0)
     );
 
-    let obj = Obj::load("assets/models/saturno.obj").expect("Failed to load obj");
+    let obj = Obj::load("assets/models/cuerpo2.obj").expect("Failed to load obj");
     let vertex_arrays = obj.get_vertex_array(); 
     let mut time = 0;
+
+    let noise = create_noise();
+    let projection_matrix = create_perspective_matrix(window_width as f32, window_height as f32);
+    let viewport_matrix = create_viewport_matrix(framebuffer_width as f32, framebuffer_height as f32);
+    let mut uniforms = Uniforms { 
+        model_matrix: Mat4::identity(), 
+        view_matrix: Mat4::identity(), 
+        projection_matrix, 
+        viewport_matrix, 
+        time: 0, 
+        noise
+    };
 
     while window.is_open() {
         if window.is_key_down(Key::Escape) {
@@ -174,18 +269,9 @@ fn main() {
 
         framebuffer.clear();
 
-        let model_matrix = create_model_matrix(translation, scale, rotation);
-        let view_matrix = create_view_matrix(camera.eye, camera.center, camera.up);
-        let projection_matrix = create_perspective_matrix(window_width as f32, window_height as f32);
-        let viewport_matrix = create_viewport_matrix(framebuffer_width as f32, framebuffer_height as f32);
-        let uniforms = Uniforms { 
-            model_matrix, 
-            view_matrix, 
-            projection_matrix, 
-            viewport_matrix, 
-            time, 
-        };
-
+        uniforms.model_matrix = create_model_matrix(translation, scale, rotation);
+        uniforms.view_matrix = create_view_matrix(camera.eye, camera.center, camera.up);
+        uniforms.time = time;
         framebuffer.set_current_color(0xFFDDDD);
         render(&mut framebuffer, &uniforms, &vertex_arrays);
 
@@ -199,44 +285,44 @@ fn handle_input(window: &Window, camera: &mut Camera) {
     let movement_speed = 1.0;
     let rotation_speed = PI/50.0;
     let zoom_speed = 0.1;
-   
+
     //  camera orbit controls
     if window.is_key_down(Key::Left) {
-      camera.orbit(rotation_speed, 0.0);
+        camera.orbit(rotation_speed, 0.0);
     }
     if window.is_key_down(Key::Right) {
-      camera.orbit(-rotation_speed, 0.0);
+        camera.orbit(-rotation_speed, 0.0);
     }
     if window.is_key_down(Key::W) {
-      camera.orbit(0.0, -rotation_speed);
+        camera.orbit(0.0, -rotation_speed);
     }
     if window.is_key_down(Key::S) {
-      camera.orbit(0.0, rotation_speed);
+        camera.orbit(0.0, rotation_speed);
     }
 
     // Camera movement controls
     let mut movement = Vec3::new(0.0, 0.0, 0.0);
     if window.is_key_down(Key::A) {
-      movement.x -= movement_speed;
+        movement.x -= movement_speed;
     }
     if window.is_key_down(Key::D) {
-      movement.x += movement_speed;
+        movement.x += movement_speed;
     }
     if window.is_key_down(Key::Q) {
-      movement.y += movement_speed;
+        movement.y += movement_speed;
     }
     if window.is_key_down(Key::E) {
-      movement.y -= movement_speed;
+        movement.y -= movement_speed;
     }
     if movement.magnitude() > 0.0 {
-      camera.move_center(movement);
+        camera.move_center(movement);
     }
 
     // Camera zoom controls
     if window.is_key_down(Key::Up) {
-      camera.zoom(zoom_speed);
+        camera.zoom(zoom_speed);
     }
     if window.is_key_down(Key::Down) {
-      camera.zoom(-zoom_speed);
+        camera.zoom(-zoom_speed);
     }
 }
